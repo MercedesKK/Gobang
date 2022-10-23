@@ -165,8 +165,6 @@ public slots:
     void regret();
     void PVPfun();
     void PVEfun();
-private slots:
-    void on_PVP_clicked(bool checked);
 };
 
 #endif // MAINWINDOW_H
