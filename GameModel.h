@@ -25,32 +25,49 @@ constexpr static int boxWidth = gap * boxNum;
 constexpr static int startX = 60;
 constexpr static int startY = 60;
 
-enum patternID
+class Chess
 {
-    LongLink = 0,
-    Active4,
-    Sleep4,
-    Active3,
-    Sleep3,
-    Active2,
-    Sleep2,
-    Dead4,
-    Dead3,
-    Dead2
+public:
+    int gomoku[boxNum + 1][boxNum + 1];
+
+public:
+    Chess();
 };
 
-struct step
+class GameModel
 {
-    int x;
-    int y;
-    bool nowWhite;
-    int score;
-    step(int xx = 0, int yy = 0, bool nw = true)
+    friend class MainWindow;
+private:
+    Chess chess;
+
+    bool isPVP;              ///< 判断是不是PVP模式
+    bool gameOver;           ///< 判断游戏是否结束
+    bool nowWhite;           ///< 记录当前是否是白子
+    int stepAlreadyMade;     ///< 已经走的步数
+    bool AIIsThinking;       ///< 判断是不是AI在运行
+    // 画图、悔棋用 从1开始算
+    int XStack[250];
+    int YStack[250];
+
+    /// @brief 储存该棋局面已经下棋的信息
+    struct SingleStep
     {
-        x = xx;
-        y = yy;
-        nowWhite = nw;
-    }
+        std::pair<int, int> point;  ///< 这一步是什么坐标
+        bool isWhite;               ///< 这一步是什么棋
+
+        SingleStep(std::pair<int,int> rhsPoint, bool rhsIsWhite): point(rhsPoint),isWhite(rhsIsWhite) {}
+    };
+    // 第一个模板参数代表第几步，第二个模板参数见上
+    std::map<int, SingleStep> stepAll;
+
+
+public:
+    GameModel();
+
+    bool judge(int x, int y, bool nowWhite); // 判断（x,y）处nowwhile是否赢
+    bool judgeGameOver();  // 结束返回true
 };
+
+
 
 #endif // GAMEMODEL_H

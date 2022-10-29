@@ -17,12 +17,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     AI.cpp \
+    GameModel.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     AI.h \
-    GameModel.h \
+    GameModel.h \ \
     mainwindow.h
 
 FORMS += \

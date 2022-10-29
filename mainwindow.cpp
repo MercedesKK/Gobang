@@ -10,15 +10,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(ui->PVP, SIGNAL(clicked(bool)), this, SLOT(PVPfun()));
     connect(ui->PVE,SIGNAL(clicked(bool)),this,SLOT(PVEfun()));
 
-    for (int i = 0; i < boxNum + 1; ++i)
-        for (int j = 0; j < boxNum + 1; ++j)
-            gomoku[i][j] = 0;
-
-    isPVP = true;
-    nowWhite = false; // true;
-    gameOver = false;
-    AIIsThinking = false;
-    stepAlreadyMade = 0;
+    GameModel game; // 默认构造
 }
 
 MainWindow::~MainWindow()
@@ -68,13 +60,13 @@ void MainWindow::paintEvent(QPaintEvent *e)
     {
         for (int j = 0; j < boxNum + 1; ++j)
         {
-            if (gomoku[i][j] == 1)
+            if (game.chess.gomoku[i][j] == 1)
             {
                 painter.setPen(whitePen);
                 painter.setBrush(whilteBrush);
                 painter.drawEllipse(QPoint(startX + i * gap, startY + j * gap), (int)(gap * 0.35), (int)(gap * 0.35));
             }
-            else if (gomoku[i][j] == 2)
+            else if (game.chess.gomoku[i][j] == 2)
             {
                 painter.setPen(blackPen);
                 painter.setBrush(blackBrush);
@@ -86,15 +78,16 @@ void MainWindow::paintEvent(QPaintEvent *e)
     QPen redPen(QColor(255, 0, 0));
     painter.setPen(redPen);
     painter.setBrush(Qt::NoBrush);
-    if (stepAlreadyMade > 0)
+    if (game.stepAlreadyMade > 0)
     {
-        painter.drawRect(startX + gap * XStack[stepAlreadyMade] - (int)(gap * 0.5), startY + gap * YStack[stepAlreadyMade] - (int)(gap * 0.5),
+        painter.drawRect(startX + gap * game.XStack[game.stepAlreadyMade] - (int)(gap * 0.5), startY + gap * game.YStack[game.stepAlreadyMade] - (int)(gap * 0.5),
                          gap, gap);
     }
 }
+
 void MainWindow::mousePressEvent(QMouseEvent *e)
 {
-    if (gameOver /*|| AIIsThinking*/)
+    if (game.gameOver /*|| AIIsThinking*/)
         return;
     //获得当前坐标
     int x = e->x() - (startX - gap / 2);
@@ -111,31 +104,38 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     {
         y /= gap;
     }
-    if (nowWhite)
+    if (game.nowWhite)
         QOUT << "白子 "
              << "x=" << x << "  y=" << y;
     else
         QOUT << "黑子  "
              << "x=" << x << "  y=" << y;
+
+
+    // 点击后更新信息
     if (x > boxNum || y > boxNum)
         return;
 
-    if (gomoku[x][y] == 0)
+    if (game.chess.gomoku[x][y] == 0)
     {
-        gomoku[x][y] = nowWhite ? 1 : 2;
+        game.chess.gomoku[x][y] = game.nowWhite ? 1 : 2;
 
 
-        ++stepAlreadyMade;
-        XStack[stepAlreadyMade] = x;
-        YStack[stepAlreadyMade] = y;
+        ++game.stepAlreadyMade;
+        game.XStack[game.stepAlreadyMade] = x;
+        game.YStack[game.stepAlreadyMade] = y;
     }
     else
         return;
 
-    if (judge(x, y, nowWhite))
+    game.stepAll.insert({game.stepAlreadyMade, GameModel::SingleStep({x, y}, game.nowWhite)});
+
+
+    // 判断此次操作是否结束游戏
+    if (game.judge(x, y, game.nowWhite))
     {
-        gameOver = true;
-        if (nowWhite)
+        game.gameOver = true;
+        if (game.nowWhite)
         {
             ui->gameStatus->setText(tr("白棋获胜！"));
         }
@@ -145,16 +145,23 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         }
         //      qDebug()<<"win !!!"<<endl;
         this->repaint();
-        AIIsThinking = false;
+        game.AIIsThinking = false;
         return;
     }
-    if (stepAlreadyMade >= 15 * 15)
+
+    for (auto item : game.stepAll)
+    {
+        QOUT << item.first << ' ' << item.second.point.first << " " <<item.second.point.second << " " << item.second.isWhite;
+    }
+
+    // 判断结束后换手等操作
+    if (game.stepAlreadyMade >= 15 * 15)
     {
         ui->gameStatus->setText(tr("平局！"));
         return;
     }
-    nowWhite = !nowWhite;
-    if (nowWhite)
+    game.nowWhite = !game.nowWhite;
+    if (game.nowWhite)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
@@ -162,183 +169,35 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     this->repaint();
 
     
-    if (!isPVP)
+    if (!game.isPVP)
     {
         //对手下子完毕
         ui->gameStatus->setText(tr("AI思考中..."));
         //多线程版本代码
-        AIIsThinking = true;
+        game.AIIsThinking = true;
         emit AIShouldMove();
     }
     return;
 }
 
-bool MainWindow::judge(int x, int y, bool nowWhite)
-{
-    int count = 0;
-    int flag = nowWhite ? 1 : 2;
-    //横向
-    for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
-    {
-        if (gomoku[i][y] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-    //纵向
-    count = 0;
-    for (int j = ((y - 4) < 0 ? 0 : y - 4); j <= ((y + 4) > boxNum ? boxNum : y + 4); ++j)
-    {
-        if (gomoku[x][j] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-    //左下到右上
-    count = 0;
-    for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
-    {
-        int yy = y + i - x;
-
-        if (yy < 0)
-            continue;
-        else if (yy > boxNum)
-            break;
-
-        if (gomoku[i][yy] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-    //左上到右下
-    count = 0;
-    for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
-    {
-        int yy = y + x - i;
-
-        if (yy > boxNum)
-            continue;
-        else if (yy < 0)
-            break;
-
-        if (gomoku[i][yy] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-
-    return false;
-}
-
-bool MainWindow::judge(int chess[15][15], int x, int y, bool nowWhite)
-{
-    int count = 0;
-    int flag = nowWhite ? 1 : 2;
-    //横向
-    for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
-    {
-        if (chess[i][y] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-    //纵向
-    count = 0;
-    for (int j = ((y - 4) < 0 ? 0 : y - 4); j <= ((y + 4) > boxNum ? boxNum : y + 4); ++j)
-    {
-        if (chess[x][j] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-    //左下到右上
-    count = 0;
-    for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
-    {
-        int yy = y + i - x;
-
-        if (yy < 0)
-            continue;
-        else if (yy > boxNum)
-            break;
-
-        if (chess[i][yy] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-    //左上到右下
-    count = 0;
-    for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
-    {
-        int yy = y + x - i;
-
-        if (yy > boxNum)
-            continue;
-        else if (yy < 0)
-            break;
-
-        if (chess[i][yy] == flag)
-            count++;
-        else
-            count = 0;
-        if (count == 5)
-            return true;
-    }
-
-    return false;
-}
-
 void MainWindow::PVPfun()
 {
     restartGame();
-    isPVP = true;
+    game.isPVP = true;
 }
 
 void MainWindow::PVEfun()
 {
     restartGame();
-    isPVP = false;
+    game.isPVP = false;
 }
 
 void MainWindow::restartGame()
 {
-//    if (AIIsThinking)
-//    {
-//        //结束ai进程
-//        return;
-//        AIThread.terminate();
-//        AIThread.wait();
-//    }
+    game.~GameModel();
+    game = GameModel();
 
-
-    for (int i = 0; i < boxNum + 1; ++i)
-    {
-        for (int j = 0; j < boxNum + 1; ++j)
-        {
-            gomoku[i][j] = 0;
-        }
-    }
-    nowWhite = false;
-    gameOver = false;
-
-    stepAlreadyMade = 0;
-
-    if (nowWhite)
+    if (game.nowWhite)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
@@ -349,22 +208,18 @@ void MainWindow::regret()
 {
 //    if (AIIsThinking)
 //        return;
-    if (stepAlreadyMade <= 0)
+    if (game.stepAlreadyMade <= 0)
     {
         QMessageBox::warning(this, tr("五子棋"), tr("不能悔棋了"));
         return;
     }
-    gomoku[XStack[stepAlreadyMade]][YStack[stepAlreadyMade]] = 0;
-
-
-    --stepAlreadyMade;
-    gomoku[XStack[stepAlreadyMade]][YStack[stepAlreadyMade]] = 0;
-
-
-    --stepAlreadyMade;
-    nowWhite = false;
-    gameOver = false;
-    if (nowWhite)
+    game.chess.gomoku[game.XStack[game.stepAlreadyMade]][game.YStack[game.stepAlreadyMade]] = 0;
+    --game.stepAlreadyMade;
+    game.chess.gomoku[game.XStack[game.stepAlreadyMade]][game.YStack[game.stepAlreadyMade]] = 0;
+    --game.stepAlreadyMade;
+    game.nowWhite = false;
+    game.gameOver = false;
+    if (game.nowWhite)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
