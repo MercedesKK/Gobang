@@ -10,7 +10,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(ui->PVP, SIGNAL(clicked(bool)), this, SLOT(PVPfun()));
     connect(ui->PVE,SIGNAL(clicked(bool)),this,SLOT(PVEfun()));
 
-    GameModel game; // 默认构造
+    stepAlreadyMade = 0;
+    AIIsThinking = false;
+    gameOver = false;
+    isPVP = true;
+    nowWhite = true;
+    chess = std::make_shared<Chess>();
+
 }
 
 MainWindow::~MainWindow()
@@ -60,13 +66,13 @@ void MainWindow::paintEvent(QPaintEvent *e)
     {
         for (int j = 0; j < boxNum + 1; ++j)
         {
-            if (game.chess.gomoku[i][j] == 1)
+            if (chess->getChess(i,j) == 1)
             {
                 painter.setPen(whitePen);
                 painter.setBrush(whilteBrush);
                 painter.drawEllipse(QPoint(startX + i * gap, startY + j * gap), (int)(gap * 0.35), (int)(gap * 0.35));
             }
-            else if (game.chess.gomoku[i][j] == 2)
+            else if (chess->getChess(i,j) == 2)
             {
                 painter.setPen(blackPen);
                 painter.setBrush(blackBrush);
@@ -78,16 +84,17 @@ void MainWindow::paintEvent(QPaintEvent *e)
     QPen redPen(QColor(255, 0, 0));
     painter.setPen(redPen);
     painter.setBrush(Qt::NoBrush);
-    if (game.stepAlreadyMade > 0)
+    if (stepAlreadyMade > 0)
     {
-        painter.drawRect(startX + gap * game.XStack[game.stepAlreadyMade] - (int)(gap * 0.5), startY + gap * game.YStack[game.stepAlreadyMade] - (int)(gap * 0.5),
+        painter.drawRect(startX + gap * XStack[stepAlreadyMade] - (int)(gap * 0.5), startY + gap * YStack[stepAlreadyMade] - (int)(gap * 0.5),
                          gap, gap);
     }
+
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *e)
 {
-    if (game.gameOver /*|| AIIsThinking*/)
+    if (gameOver || AIIsThinking)
         return;
     //获得当前坐标
     int x = e->x() - (startX - gap / 2);
@@ -104,7 +111,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     {
         y /= gap;
     }
-    if (game.nowWhite)
+    if (nowWhite)
         QOUT << "白子 "
              << "x=" << x << "  y=" << y;
     else
@@ -116,26 +123,23 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     if (x > boxNum || y > boxNum)
         return;
 
-    if (game.chess.gomoku[x][y] == 0)
+    if (chess->getChess(x,y) == 0)
     {
-        game.chess.gomoku[x][y] = game.nowWhite ? 1 : 2;
+        chess->setChess(x,y,(nowWhite ? 1 : 2));
 
-
-        ++game.stepAlreadyMade;
-        game.XStack[game.stepAlreadyMade] = x;
-        game.YStack[game.stepAlreadyMade] = y;
+        ++stepAlreadyMade;
+        XStack[stepAlreadyMade] = x;
+        YStack[stepAlreadyMade] = y;
     }
     else
         return;
 
-    game.stepAll.insert({game.stepAlreadyMade, GameModel::SingleStep({x, y}, game.nowWhite)});
-
 
     // 判断此次操作是否结束游戏
-    if (game.judge(x, y, game.nowWhite))
+    if (game.judge(chess, x, y, nowWhite))
     {
-        game.gameOver = true;
-        if (game.nowWhite)
+        gameOver = true;
+        if (nowWhite)
         {
             ui->gameStatus->setText(tr("白棋获胜！"));
         }
@@ -144,24 +148,27 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
             ui->gameStatus->setText(tr("黑棋获胜！"));
         }
         //      qDebug()<<"win !!!"<<endl;
+        QOUT << game.judgeAll(chess);
         this->repaint();
-        game.AIIsThinking = false;
+        AIIsThinking = false;
         return;
     }
 
-    for (auto item : game.stepAll)
-    {
-        QOUT << item.first << ' ' << item.second.point.first << " " <<item.second.point.second << " " << item.second.isWhite;
-    }
+//    for (auto item : game.stepAll)
+//    {
+//        QOUT << item.first << ' ' << item.second.point.first << " " <<item.second.point.second << " " << item.second.isWhite;
+//    }
+
+
 
     // 判断结束后换手等操作
-    if (game.stepAlreadyMade >= 15 * 15)
+    if (stepAlreadyMade >= 15 * 15)
     {
         ui->gameStatus->setText(tr("平局！"));
         return;
     }
-    game.nowWhite = !game.nowWhite;
-    if (game.nowWhite)
+    nowWhite = !nowWhite;
+    if (nowWhite)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
@@ -169,13 +176,38 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     this->repaint();
 
     
-    if (!game.isPVP)
+    /// @details AI落子
+    if (!isPVP)
     {
         //对手下子完毕
         ui->gameStatus->setText(tr("AI思考中..."));
-        //多线程版本代码
-        game.AIIsThinking = true;
-        emit AIShouldMove();
+        AIIsThinking = true;
+
+        // 执行MCTS！！！
+        chess = mcts.MCTStest(chess);
+
+//        // 绘图
+//        ++stepAlreadyMade;
+//        XStack[stepAlreadyMade] =
+//        YStack[stepAlreadyMade] =
+
+        nowWhite = !nowWhite;
+        if (nowWhite)
+            ui->who->setText(tr("请白棋落子"));
+        else
+            ui->who->setText(tr("请黑棋落子"));
+
+
+///////// 测试休眠2秒
+//        QEventLoop eventloop;
+//        QTimer::singleShot(2000, &eventloop, SLOT(quit()));
+//        eventloop.exec();
+
+        this->repaint();
+
+
+        ui->gameStatus->setText(tr("棋局进行中"));
+        AIIsThinking = false;
     }
     return;
 }
@@ -183,21 +215,28 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
 void MainWindow::PVPfun()
 {
     restartGame();
-    game.isPVP = true;
+    isPVP = true;
 }
 
 void MainWindow::PVEfun()
 {
     restartGame();
-    game.isPVP = false;
+    isPVP = false;
 }
 
 void MainWindow::restartGame()
 {
-    game.~GameModel();
-    game = GameModel();
+    game.clearChess(chess);
 
-    if (game.nowWhite)
+    isPVP = true;
+    gameOver = false;           ///< 判断游戏是否结束
+    nowWhite = true;           ///< 记录当前是否是白子
+    AIIsThinking = false;
+    stepAlreadyMade = 0;
+    memset(XStack,0,sizeof XStack);
+    memset(YStack,0,sizeof YStack);
+
+    if (nowWhite)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
@@ -208,18 +247,19 @@ void MainWindow::regret()
 {
 //    if (AIIsThinking)
 //        return;
-    if (game.stepAlreadyMade <= 0)
+    if (stepAlreadyMade <= 0)
     {
         QMessageBox::warning(this, tr("五子棋"), tr("不能悔棋了"));
         return;
     }
-    game.chess.gomoku[game.XStack[game.stepAlreadyMade]][game.YStack[game.stepAlreadyMade]] = 0;
-    --game.stepAlreadyMade;
-    game.chess.gomoku[game.XStack[game.stepAlreadyMade]][game.YStack[game.stepAlreadyMade]] = 0;
-    --game.stepAlreadyMade;
-    game.nowWhite = false;
-    game.gameOver = false;
-    if (game.nowWhite)
+
+    chess->setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
+    --stepAlreadyMade;
+    chess->setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
+    --stepAlreadyMade;
+    nowWhite = false;
+    gameOver = false;
+    if (nowWhite)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
