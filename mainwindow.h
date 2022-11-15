@@ -5,6 +5,7 @@
 #include "QTimer"
 #include "Chess.hpp"
 #include "MCTS.h"
+#include "MultiwayTree.hpp"
 
 namespace Ui
 {
@@ -26,7 +27,8 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    std::shared_ptr<Chess> chess;
+
+    Chess chess;
     MCTS mcts;
     GameModel game;
 

@@ -22,10 +22,13 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    BinaryTree.hpp \
     Chess.hpp \
     GameModel.h \ \
     MCTS.h \
-    mainwindow.h
+    MultiwayTree.hpp \
+    mainwindow.h \
+    memory.hpp
 
 FORMS += \
     mainwindow.ui

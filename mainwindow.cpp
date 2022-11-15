@@ -15,8 +15,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     gameOver = false;
     isPVP = true;
     nowWhite = true;
-    chess = std::make_shared<Chess>();
-
 }
 
 MainWindow::~MainWindow()
@@ -66,13 +64,13 @@ void MainWindow::paintEvent(QPaintEvent *e)
     {
         for (int j = 0; j < boxNum + 1; ++j)
         {
-            if (chess->getChess(i,j) == 1)
+            if (chess.getChess(i,j) == 1)
             {
                 painter.setPen(whitePen);
                 painter.setBrush(whilteBrush);
                 painter.drawEllipse(QPoint(startX + i * gap, startY + j * gap), (int)(gap * 0.35), (int)(gap * 0.35));
             }
-            else if (chess->getChess(i,j) == 2)
+            else if (chess.getChess(i,j) == 2)
             {
                 painter.setPen(blackPen);
                 painter.setBrush(blackBrush);
@@ -119,13 +117,13 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
              << "x=" << x << "  y=" << y;
 
 
-    // 点击后更新信息
+    /// 点击后更新信息
     if (x > boxNum || y > boxNum)
         return;
 
-    if (chess->getChess(x,y) == 0)
+    if (chess.getChess(x,y) == 0)
     {
-        chess->setChess(x,y,(nowWhite ? 1 : 2));
+        chess.setChess(x,y,(nowWhite ? 1 : 2));
 
         ++stepAlreadyMade;
         XStack[stepAlreadyMade] = x;
@@ -135,7 +133,10 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         return;
 
 
-    // 判断此次操作是否结束游戏
+//    mcts.tree.setRoot(1);
+//    auto root = mcts.tree.getRoot();
+
+    /// 判断此次操作是否结束游戏
     if (game.judge(chess, x, y, nowWhite))
     {
         gameOver = true;
@@ -154,14 +155,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         return;
     }
 
-//    for (auto item : game.stepAll)
-//    {
-//        QOUT << item.first << ' ' << item.second.point.first << " " <<item.second.point.second << " " << item.second.isWhite;
-//    }
-
-
-
-    // 判断结束后换手等操作
+    /// 判断结束后换手等操作
     if (stepAlreadyMade >= 15 * 15)
     {
         ui->gameStatus->setText(tr("平局！"));
@@ -172,11 +166,10 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         ui->who->setText(tr("请白棋落子"));
     else
         ui->who->setText(tr("请黑棋落子"));
-    //  update();
     this->repaint();
 
     
-    /// @details AI落子
+    //////////////////////////////////////////// @details AI落子
     if (!isPVP)
     {
         //对手下子完毕
@@ -184,7 +177,17 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         AIIsThinking = true;
 
         // 执行MCTS！！！
-        chess = mcts.MCTStest(chess);
+        chess = mcts.UCTsearch(chess, chess.getLastPoint(), 1);
+
+        /// AI赢了
+        if (game.judgeAll(chess))
+        {
+            gameOver = true;
+            ui->gameStatus->setText(tr("黑棋获胜！"));
+            this->repaint();
+            AIIsThinking = false;
+            return;
+        }
 
 //        // 绘图
 //        ++stepAlreadyMade;
@@ -209,6 +212,9 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         ui->gameStatus->setText(tr("棋局进行中"));
         AIIsThinking = false;
     }
+        //////////////////////////////////////////// AI落子结束
+
+
     return;
 }
 
@@ -226,7 +232,7 @@ void MainWindow::PVEfun()
 
 void MainWindow::restartGame()
 {
-    game.clearChess(chess);
+    game.clearChess(&chess);
 
     isPVP = true;
     gameOver = false;           ///< 判断游戏是否结束
@@ -253,9 +259,9 @@ void MainWindow::regret()
         return;
     }
 
-    chess->setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
+    chess.setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
     --stepAlreadyMade;
-    chess->setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
+    chess.setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
     --stepAlreadyMade;
     nowWhite = false;
     gameOver = false;

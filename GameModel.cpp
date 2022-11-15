@@ -1,13 +1,13 @@
 #include "GameModel.h"
 
-bool GameModel::judge(std::shared_ptr<Chess> chess,int x, int y, bool nowWhite)
+bool GameModel::judge(Chess chess,int x, int y, bool nowWhite)
 {
     int count = 0;
     int flag = nowWhite ? 1 : 2;
     //横向
     for (int i = ((x - 4) < 0 ? 0 : x - 4); i <= ((x + 4) > boxNum ? boxNum : x + 4); ++i)
     {
-        if (chess->getChess(i, y) == flag)
+        if (chess.getChess(i, y) == flag)
             count++;
         else
             count = 0;
@@ -18,7 +18,7 @@ bool GameModel::judge(std::shared_ptr<Chess> chess,int x, int y, bool nowWhite)
     count = 0;
     for (int j = ((y - 4) < 0 ? 0 : y - 4); j <= ((y + 4) > boxNum ? boxNum : y + 4); ++j)
     {
-        if (chess->getChess(x, j) == flag)
+        if (chess.getChess(x, j) == flag)
             count++;
         else
             count = 0;
@@ -36,7 +36,7 @@ bool GameModel::judge(std::shared_ptr<Chess> chess,int x, int y, bool nowWhite)
         else if (yy > boxNum)
             break;
 
-        if (chess->getChess(i, yy) == flag)
+        if (chess.getChess(i, yy) == flag)
             count++;
         else
             count = 0;
@@ -54,7 +54,7 @@ bool GameModel::judge(std::shared_ptr<Chess> chess,int x, int y, bool nowWhite)
         else if (yy < 0)
             break;
 
-        if (chess->getChess(i, yy) == flag)
+        if (chess.getChess(i, yy) == flag)
             count++;
         else
             count = 0;
@@ -65,7 +65,7 @@ bool GameModel::judge(std::shared_ptr<Chess> chess,int x, int y, bool nowWhite)
     return false;
 }
 
-int GameModel::judgeAll(std::shared_ptr<Chess> chess)
+int GameModel::judgeAll(Chess chess)
 {
     for (int i = 0; i <= boxNum; i++)
         for (int j = 0; j <= boxNum; j++)
@@ -79,7 +79,7 @@ int GameModel::judgeAll(std::shared_ptr<Chess> chess)
     return 0;
 }
 
-void GameModel::clearChess(std::shared_ptr<Chess> chess)
+void GameModel::clearChess(Chess* chess)
 {
     for (int i = 0; i <= boxNum; i++)
         for (int j = 0; j <= boxNum; j++)

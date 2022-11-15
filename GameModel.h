@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <memory>
 #include "Chess.hpp"
+#include "MultiwayTree.hpp"
+
 #define QOUT qDebug()
 
 class GameModel
@@ -27,9 +29,9 @@ class GameModel
 public:
     GameModel() = default;
 
-    void clearChess(std::shared_ptr<Chess> chess);
-    bool judge(std::shared_ptr<Chess> chess,int x, int y, bool nowWhite); // 判断（x,y）处nowwhile是否赢
-    int judgeAll(std::shared_ptr<Chess> chess);  // 1代表白棋赢，2代表黑棋赢，0代表没结束
+    void clearChess(Chess* chess);                       /// @attention 必须传入地址，不然清除不干净
+    static bool judge(Chess chess,int x, int y, bool nowWhite); // 判断（x,y）处nowwhile是否赢
+    static int judgeAll(Chess chess);                          // 1代表白棋赢，2代表黑棋赢，0代表没结束
 };
 
 
