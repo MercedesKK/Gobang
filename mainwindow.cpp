@@ -179,6 +179,13 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         // 执行MCTS！！！
         chess = mcts.UCTsearch(chess, chess.getLastPoint(), 1);
 
+        // 存入stack
+        std::pair<int, int> xy = chess.getLastPoint();
+        ++stepAlreadyMade;
+        XStack[stepAlreadyMade] = xy.first;
+        YStack[stepAlreadyMade] = xy.second;
+
+
         /// AI赢了
         if (game.judgeAll(chess))
         {
@@ -189,10 +196,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
             return;
         }
 
-//        // 绘图
-//        ++stepAlreadyMade;
-//        XStack[stepAlreadyMade] =
-//        YStack[stepAlreadyMade] =
 
         nowWhite = !nowWhite;
         if (nowWhite)
@@ -263,7 +266,6 @@ void MainWindow::regret()
     --stepAlreadyMade;
     chess.setChess(XStack[stepAlreadyMade],YStack[stepAlreadyMade], 0);
     --stepAlreadyMade;
-    nowWhite = false;
     gameOver = false;
     if (nowWhite)
         ui->who->setText(tr("请白棋落子"));
