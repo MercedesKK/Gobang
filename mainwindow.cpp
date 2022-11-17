@@ -132,10 +132,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     else
         return;
 
-
-//    mcts.tree.setRoot(1);
-//    auto root = mcts.tree.getRoot();
-
     /// 判断此次操作是否结束游戏
     if (game.judge(chess, x, y, nowWhite))
     {
@@ -148,7 +144,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         {
             ui->gameStatus->setText(tr("黑棋获胜！"));
         }
-        //      qDebug()<<"win !!!"<<endl;
         QOUT << game.judgeAll(chess);
         this->repaint();
         AIIsThinking = false;
@@ -178,6 +173,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
 
         // 执行MCTS！！！
         chess = mcts.UCTsearch(chess, chess.getLastPoint(), 1);
+
+        QOUT << chess.getLastPoint().first << " " << chess.getLastPoint().second;
 
         // 存入stack
         std::pair<int, int> xy = chess.getLastPoint();

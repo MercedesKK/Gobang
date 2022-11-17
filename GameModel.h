@@ -18,7 +18,7 @@
 #include <QTime>
 #include <unordered_map>
 #include <memory>
-#include "Chess.hpp"
+#include "Chess.h"
 #include "MultiwayTree.hpp"
 
 #define QOUT qDebug()

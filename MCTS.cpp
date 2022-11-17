@@ -3,6 +3,8 @@
 #include <cmath>
 #define QOUT qDebug()
 
+
+
 //////////////////////////////////////////////////////
 ////              AI Object
 //////////////////////////////////////////////////////
@@ -10,46 +12,49 @@
 /// player 传入的是2
 Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 {
-    Chess y = chess;
-    Chess ans = y;
+//    if (checkFastwin_1(chess).first)
+//    {
+//        Chess ans = chess;
+//        std::pair<int, int> u = checkFastwin_1(chess).second;
+//        ans.setChess(u.first, u.second, player + 1);
+//        return ans;
+//    }
+//    if (checkFastwin_2(chess).first)
+//    {
+//        Chess ans = chess;
+//        std::pair<int, int> u = checkFastwin_2(chess).second;
+//        ans.setChess(u.first, u.second, player + 1);
+//        return ans;
+//    }
 
-    tree.remove(chess);
-    /// @attention 必须先清除一次tree，因为只能将当前状态作为根节点
-    tree.setRoot(chess);
-    chess.properity.value = 0;
-    chess.properity.mockNum = 0;
-    QOUT << chess.properity.mockNum;
+    if (mp.find(chess) == mp.end())
+        initChess(chess);
+
+    fa.clear();
+    mp.clear();
 
     int cnt = 0; // 选择次数
-    while (cnt <= 35)
+    while (cnt <= selectNum)
     {
         cnt++;
 
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
 
-//        for (int j = 1; j <= simulationNum; j++)
-//        {
-//            double s = defaultPolicy(selectPoint.first, selectPoint.second ^ 1);
-//            backUp(selectPoint.first, y, s);
-//        }
-    }
-
-    std::vector<Chess>::iterator it;
-    double maxn = UCB(*(tree.getChildren(tree.find(y)).begin()), player);
-
-    QOUT << tree.getChildren(tree.find(y)).size();
-
-    for (it = tree.getChildren(tree.find(y)).begin(); it != tree.getChildren(tree.find(y)).end(); it++)
-    {
-        if (UCB(*it, player) >= maxn)
+        for (int j = 1; j <= 1; j++)
         {
-            maxn = UCB(*it, player);
-            ans = *it;
+            double s = defaultPolicy(selectPoint.first, selectPoint.second ^ 1);
+            backUp(selectPoint.first, chess, s);
         }
-
-        QOUT << "UCB:" << UCB(*it, player);
     }
-    //QOUT << tree.getRoot()->_val.second.properity.mockNum;
+
+    /// test 所有节点的properity
+    int num = 0;
+    for (auto item : mp)
+    {
+        QOUT << num++ << ":" << item.second.value << " " << item.second.mockNum;
+    }
+
+    Chess ans = bestChild(chess, player);
     return ans;
 }
 
@@ -72,19 +77,17 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
         int y1 = std::max(0, center.second - searchRange);
         int y2 = std::min(boxNum, center.second + searchRange);
 
-        if (cntNum(chess, x1, x2, y1, y2) + tree.getChildren(tree.find(chess)).size() < (x2 - x1 + 1) * (y2 - y1 + 1))
+        if (cntNum(chess, x1, x2, y1, y2) + mp[chess].vec.size() < (x2 - x1 + 1) * (y2 - y1 + 1))
         {
-
             return std::make_pair(expandNode(chess, center, nowblack), nowblack);
         }
-        else // 选择叶子节点
+        else
         {
             Chess y = chess;
             std::vector<Chess>::iterator it;
-            if (tree.getChildren(tree.find(y)).size() == 0)
-                break;
-            double maxn = UCB(*((tree.getChildren(tree.find(y))).begin()), nowblack);
-            for (it = tree.getChildren(tree.find(y)).begin(); it != tree.getChildren(tree.find(y)).end(); it++)
+            if (mp[y].vec.size() == 0)break;
+            double maxn = - 0x3f3f3f3f - 1;
+            for (it = mp[y].vec.begin(); it != mp[y].vec.end(); it++)
             {
                 if (UCB(*it, nowblack) >= maxn)
                 {
@@ -92,11 +95,10 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
                     chess = *it;
                 }
             }
+            fa[chess] = y;
         }
         nowblack ^= 1;
     }
-    QOUT << "test";
-    return std::make_pair(chess, nowblack);
 }
 
 int MCTS::cntNum(Chess chess, int x1, int x2, int y1, int y2)
@@ -120,24 +122,39 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
     int y2 = std::min(boxNum, center.second + searchRange);
 
     int putCnt = 0;
-    while (putCnt <= 100000)
-    {
-        int i = x1 + rand() % (x2 - x1 + 1);
-        int j = y1 + rand() % (y2 - y1 + 1);
-
-        int temp = chess.getChess(i, j);
-        y.setChess(i, j, nowblack + 1);
-
-        if (!chess.getChess(i, j) && tree.find(y) == nullptr)
+    while (putCnt <= 10000)
         {
-            y.properity.value = 0, y.properity.mockNum = 0;
-            tree.addChild(tree.find(chess), y);
-            // QOUT << tree.getChildren(tree.find(chess)).size();
-            return y;
+            int i = x1 + rand() % (x2 - x1 + 1);
+            int j = y1 + rand() % (y2 - y1 + 1);
+            int o = chess.getChess(i, j);
+            y.setChess(i, j, nowblack + 1);
+            if (!chess.getChess(i, j) && mp.find(y) == mp.end())
+            {
+                initChess(y);
+                mp[chess].vec.push_back(y);
+                fa[y] = chess;
+                return y;
+            }
+            y.setChess(i, j, o);
+            putCnt++;
         }
-        y.setChess(i, j, temp); // 恢复
-        putCnt++;
+
+}
+
+Chess MCTS::bestChild(Chess chess, int nowblack)
+{
+    Chess ans;
+    std::vector<Chess>::iterator it;
+    double maxn = -0x3f3f3f3f - 1; /// 比最小值还小才行
+    for (it = mp[chess].vec.begin(); it != mp[chess].vec.end(); it++)
+    {
+        if (UCB(*it, nowblack) >= maxn)
+        {
+            maxn = UCB(*it, nowblack);
+            ans = *it;
+        }
     }
+    return ans;
 }
 
 double MCTS::defaultPolicy(Chess chess, int nowblack)
@@ -177,33 +194,29 @@ double MCTS::defaultPolicy(Chess chess, int nowblack)
 
 void MCTS::backUp(Chess x, Chess y, int value)
 {
-    Chess tempx = x;
-    tempx.properity.value += value;
-    tempx.properity.mockNum++;
-    tree.resetNodeVal(tree.find(x), tempx);
+    mp[x].value += value;
+    mp[x].mockNum++;
     while (!(x == y))
     {
-        x = tree.find(x)->_parent->_val.second;
-        Chess tempxx = x;
-        tempxx.properity.value += value;
-        tempxx.properity.mockNum++;
-        tree.resetNodeVal(tree.find(x), tempxx);
+        if (fa.find(x) == fa.end())
+            break;
+        x = fa[x];
+        mp[x].value += value;
+        mp[x].mockNum++;
     }
 }
 
 double MCTS::UCB(Chess chess, int player)
 {
-    double val = chess.properity.value;
-    double mocknum = chess.properity.mockNum;
-
-    if (mocknum == 0)
+    if (mp[chess].mockNum == 0)
         return 0;
+    double val = mp[chess].value, mocknum = mp[chess].mockNum;
     if (val + mocknum == 0)
         return -0x3f3f3f3f;
     if (player == 1)    // black
-        return val / mocknum + sqrt(log(val + mocknum) / mocknum);
+        return val / mocknum + sqrt(log(mocknum) / mocknum);
     else if (player == 0) // white
-        return - val / mocknum + sqrt(log(val + mocknum) / mocknum);
+        return - val / mocknum + sqrt(log(mocknum) / mocknum);
 }
 
 std::pair<int, int> MCTS::calCenter(Chess chess)
@@ -225,3 +238,137 @@ std::pair<int, int> MCTS::calCenter(Chess chess)
     return std::make_pair(p1, p2);
 }
 
+void MCTS::initChess(Chess chess)
+{
+    Properity p;
+    p.value = 0, p.mockNum = 0;
+    mp[chess] = p;
+}
+
+//std::pair<int, std::pair<int, int>> MCTS::checkFastwin_1(Chess chess)
+//{
+//    Chess y = chess;
+//    for (int i = 0; i <= boxNum; i++)
+//    {
+//        for (int j = 0; j <= boxNum; j++)
+//        {
+//            if (!chess.getChess(i, j))
+//            {
+//                chess.setChess(i, j, 2);
+//                if (GameModel::judgeAll(chess) == 2)
+//                    return std::make_pair(2, std::make_pair(i, j));
+//                chess.setChess(i, j, 0);
+//            }
+//        }
+//    }
+//    for (int i = 0; i <= boxNum; i++)
+//    {
+//        for (int j = 0; j <= boxNum; j++)
+//        {
+//            if (!y.getChess(i, j))
+//            {
+//                y.setChess(i, j, 1);
+//                if (GameModel::judgeAll(y) == 1)
+//                    return std::make_pair(1, std::make_pair(i, j));
+//                y.setChess(i, j, 0);
+//            }
+//        }
+//    }
+//   return std::make_pair(0, std::make_pair(0, 0));
+//}
+
+//std::pair<int, std::pair<int, int>> MCTS::checkFastwin_2(Chess chess)
+//{
+//    Chess y1 = chess, y2 = chess;
+//        for (int i = 0; i <= boxNum; i++)
+//        {
+//            for (int j = 0; j <= boxNum; j++)
+//            {
+//                if (!chess.getChess(i, j))
+//                {
+//                    chess.setChess(i, j, 2);
+//                    int flag = 1;
+//                    for (int k1 = 0; k1 <= boxNum; k1++)
+//                    {
+//                        for (int k2 = 0; k2 <= boxNum; k2++)
+//                        {
+//                            if (!chess.getChess(k1, k2))
+//                            {
+//                                chess.setChess(i, j, 1);
+//                                if (checkFastwin_1(chess).first != 2)
+//                                {
+//                                    flag = 0;
+//                                    chess.setChess(i, j, 0);
+//                                    break;
+//                                }
+//                                else
+//                                    chess.setChess(i, j, 0);
+//                            }
+//                        }
+//                        if (!flag)
+//                            break;
+//                    }
+//                    if (flag)
+//                        return std::make_pair(2, std::make_pair(i, j));
+//                    chess.setChess(i, j, 0);
+//                }
+//            }
+//        }
+
+//        std::vector<std::pair<int, int>> vec;
+
+//        for (int i = 0; i <= boxNum; i++)
+//        {
+//            for (int j = 0; j <= boxNum; j++)
+//            {
+//                if (!y1.getChess(i, j))
+//                {
+//                    y1.setChess(i, j, 1);
+//                    int flag = 1;
+//                    for (int k1 = 0; k1 <= boxNum; k1++)
+//                    {
+//                        for (int k2 = 0; k2 <= boxNum; k2++)
+//                        {
+//                            if (!y1.getChess(k1, k2))
+//                            {
+//                                y1.setChess(k1, k2, 2);
+//                                if (checkFastwin_1(y1).first != 1)
+//                                {
+//                                    flag = 0;
+//                                    y1.setChess(k1, k2, 0);
+//                                    break;
+//                                }
+//                                else
+//                                    y1.setChess(k1, k2, 0);
+//                            }
+//                        }
+//                        if (!flag)
+//                            break;
+//                    }
+//                    if (flag)
+//                         return std::make_pair(1, std::make_pair(i, j));
+//                    y1.setChess(i, j, 0);
+//                }
+//            }
+//        }
+
+//        std::vector<std::pair<int, int>>::iterator it;
+
+//        std::pair<int, int> ret;
+//        int minn = 1e9 + 7;
+
+//        for (it = vec.begin(); it != vec.end(); it++)
+//        {
+//            std::pair<int, int> k = *it;
+//            if ((k.first - calCenter(y2).first) + (k.second - calCenter(y2).second) < minn)
+//            {
+//                minn = (k.first - calCenter(y2).first) + (k.second - calCenter(y2).second);
+//                ret = k;
+//            }
+//        }
+
+//        if (vec.size())
+//            return std::make_pair(1, ret);
+
+//        return std::make_pair(0, std::make_pair(0, 0));
+//}

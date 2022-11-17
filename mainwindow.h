@@ -3,7 +3,7 @@
 
 #include "GameModel.h"
 #include "QTimer"
-#include "Chess.hpp"
+#include "Chess.h"
 #include "MCTS.h"
 #include "MultiwayTree.hpp"
 
