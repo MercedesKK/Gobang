@@ -21,7 +21,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>270</y>
+      <y>250</y>
       <width>111</width>
       <height>61</height>
      </rect>
@@ -36,8 +36,8 @@
    <widget class="QLabel" name="gameStatus">
     <property name="geometry">
      <rect>
-      <x>670</x>
-      <y>120</y>
+      <x>660</x>
+      <y>40</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -49,8 +49,8 @@
    <widget class="QLabel" name="who">
     <property name="geometry">
      <rect>
-      <x>670</x>
-      <y>70</y>
+      <x>660</x>
+      <y>100</y>
       <width>101</width>
       <height>31</height>
      </rect>
@@ -63,7 +63,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>180</y>
+      <y>160</y>
       <width>111</width>
       <height>61</height>
      </rect>
@@ -79,7 +79,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>470</y>
+      <y>520</y>
       <width>111</width>
       <height>61</height>
      </rect>
@@ -95,7 +95,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>550</y>
+      <y>610</y>
       <width>111</width>
       <height>61</height>
      </rect>
@@ -105,6 +105,35 @@
     </property>
     <property name="text">
      <string>PVE</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>350</y>
+      <width>131</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="Picture.qrc">:/background/Picture/tongji.jpg</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>660</y>
+      <width>201</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>开发人员：张靖凯、时天逸</string>
     </property>
    </widget>
   </widget>
@@ -120,6 +149,8 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="Picture.qrc"/>
+ </resources>
  <connections/>
 </ui>

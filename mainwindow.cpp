@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(ui->PVP, SIGNAL(clicked(bool)), this, SLOT(PVPfun()));
     connect(ui->PVE,SIGNAL(clicked(bool)),this,SLOT(PVEfun()));
 
+
     stepAlreadyMade = 0;
     AIIsThinking = false;
     gameOver = false;
@@ -28,7 +29,7 @@ void MainWindow::paintEvent(QPaintEvent *e)
     // 反走样
     painter.setRenderHint(QPainter::Antialiasing, true);
     // 设置画笔颜色
-    QPen tempPen(QColor(0, 160, 230));
+    QPen tempPen(QColor(105, 105, 105));
     tempPen.setWidth(3);
     //绘制外边框
     painter.setPen(tempPen);
@@ -138,11 +139,11 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         gameOver = true;
         if (nowWhite)
         {
-            ui->gameStatus->setText(tr("白棋获胜！"));
+            ui->gameStatus->setText(tr("白棋获胜!"));
         }
         else
         {
-            ui->gameStatus->setText(tr("黑棋获胜！"));
+            ui->gameStatus->setText(tr("黑棋获胜!"));
         }
         QOUT << game.judgeAll(chess);
         this->repaint();
@@ -153,7 +154,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
     /// 判断结束后换手等操作
     if (stepAlreadyMade >= 15 * 15)
     {
-        ui->gameStatus->setText(tr("平局！"));
+        ui->gameStatus->setText(tr("平局!"));
         return;
     }
     nowWhite = !nowWhite;
@@ -199,12 +200,6 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
             ui->who->setText(tr("请白棋落子"));
         else
             ui->who->setText(tr("请黑棋落子"));
-
-
-///////// 测试休眠2秒
-//        QEventLoop eventloop;
-//        QTimer::singleShot(2000, &eventloop, SLOT(quit()));
-//        eventloop.exec();
 
         this->repaint();
 

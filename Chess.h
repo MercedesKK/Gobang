@@ -2,6 +2,7 @@
 #define CHESS_H
 
 #include <utility>
+#include <vector>
 
 constexpr static int gap = 40;
 constexpr static int boxNum = 14;
@@ -23,9 +24,11 @@ public:
 
     /// 返回最后一次下的棋子坐标
     std::pair<int, int> getLastPoint();
+    std::vector<std::vector<int>> convertGomokuToVec();
 
 public:
     Chess();
+    Chess(int rgomoku[boxNum + 1][boxNum + 1]);
 
 
 
