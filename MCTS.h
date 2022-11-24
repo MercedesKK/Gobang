@@ -10,6 +10,7 @@
 #include <vector>
 #include "MultiwayTree.hpp"
 #include "GameModel.h"
+#include "ThreadPool.h"
 
 // nowWhite 用于UI判断      1为白色 0为黑色
 // nowblack 用于MCTS内部判断 1为黑色 0为白色
@@ -33,13 +34,15 @@ public:
 
     static const int searchRange = 2;       ///< 搜索范围
     static const int selectNum = 100;       ///< 选择次数
-    static const int simulationNum = 15;    ///< 每个状态模拟次数
+    static const int simulationNum = 50;    ///< 每个状态模拟次数
 
     std::map<Chess, Properity> mp;
     std::map<Chess, Chess> fa;
 
     std::vector<std::vector<int>> gameMapVec; // 存储当前游戏棋盘和棋子的情况,空白为0，白子1，黑子-1
     std::vector<std::vector<int>> scoreMapVec; // 存储各个点位的评分情况，作为AI下棋依据
+
+    std::mutex mtx;
 
     void initChess(Chess chess);
     void initDoubleVector(std::vector<std::vector<int>>&);
@@ -60,7 +63,7 @@ public:
     Chess bestChildPro(Chess chess);
 
     /// @brief 模拟    游戏至结束，黑色赢返回1，白色返回-1，和棋返回0
-    double defaultPolicy(Chess chess, int nowblack);
+    static void defaultPolicy(Chess chess, int nowblack, int& value);
 
     /// @brief 回退
     void backUp(Chess x, Chess y, int value);
@@ -74,8 +77,8 @@ public:
 //    std::pair<int, std::pair<int, int>> checkFastwin_1(Chess chess);
 //    std::pair<int, std::pair<int, int>> checkFastwin_2(Chess chess);
 
-    std::pair<int, int> calCenter(Chess chess); // 返回当前局面平均坐标
-    int isTerminal(Chess x); // 返回1时代表棋盘满了，是终端节点
+    static std::pair<int, int> calCenter(Chess chess); // 返回当前局面平均坐标
+    static int isTerminal(Chess x); // 返回1时代表棋盘满了，是终端节点
     int cntNum(Chess chess, int x1, int x2, int y1, int y2);
 };
 

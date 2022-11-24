@@ -27,11 +27,19 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
 
-        for (int j = 1; j <= 1; j++)
-        {
-            double s = defaultPolicy(selectPoint.first, selectPoint.second ^ 1);
-            backUp(selectPoint.first, chess, s);
+        {//加作用域析构掉线程池
+            ThreadPool pool(std::thread::hardware_concurrency());
+
+            for (int i = 1; i <= simulationNum; i++)
+            {
+                int s;
+                pool.enqueue(defaultPolicy, selectPoint.first, selectPoint.second ^ 1, s);
+                mtx.lock();
+                backUp(selectPoint.first, chess, s);
+                mtx.unlock();
+            }
         }
+
     }
 
     /// test 所有节点的properity
@@ -359,7 +367,7 @@ void MCTS::calculateScore()
         }
 }
 
-double MCTS::defaultPolicy(Chess chess, int nowblack)
+void MCTS::defaultPolicy(Chess chess, int nowblack, int& value)
 {
     while (1)
     {
@@ -387,11 +395,11 @@ double MCTS::defaultPolicy(Chess chess, int nowblack)
     }
 
     if (GameModel::judgeAll(chess) == 1)
-        return -1;
+        value = -1;
     else if (GameModel::judgeAll(chess) == 2)
-        return 1;
+        value = 1;
     else
-        return 0;
+        value = 0;
 }
 
 void MCTS::backUp(Chess x, Chess y, int value)
