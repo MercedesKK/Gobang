@@ -173,7 +173,16 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         AIIsThinking = true;
 
         // 执行MCTS！！！
+
+        auto startTime = system_clock::now();
+
         chess = mcts.UCTsearch(chess, chess.getLastPoint(), 1);
+
+        auto endTime = system_clock::now();
+        MCTSTime = duration_cast<milliseconds>(endTime - startTime).count() / static_cast<double>(1000);
+        QString str;
+        str = QString("AI执行时间:%1ms").arg(MCTSTime);
+        ui->time->setText(str);
 
         QOUT << chess.getLastPoint().first << " " << chess.getLastPoint().second;
 

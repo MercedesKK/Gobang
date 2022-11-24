@@ -22,8 +22,6 @@ public:
     double mockNum;
     double value;
     std::vector<Chess> vec;
-
-
 };
 
 class MCTS

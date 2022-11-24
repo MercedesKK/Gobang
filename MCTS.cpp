@@ -27,7 +27,7 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
 
-        {//加作用域析构掉线程池
+        {   // 加作用域析构掉线程池防止和主线程冲突
             ThreadPool pool(std::thread::hardware_concurrency());
 
             for (int i = 1; i <= simulationNum; i++)
@@ -39,19 +39,11 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
                 mtx.unlock();
             }
         }
-
     }
 
-    /// test 所有节点的properity
-    int num = 0;
-    for (auto item : mp)
-    {
-        QOUT << num++ << ":" << item.second.value << " " << item.second.mockNum;
-    }
+    // Chess ans = bestChild(chess, player);
 
-    Chess ans = bestChild(chess, player);
-
-    //Chess ans = bestChildPro(chess);
+    Chess ans = bestChildPro(chess);
 
     return ans;
 }

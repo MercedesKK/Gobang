@@ -5,7 +5,10 @@
 #include "QTimer"
 #include "Chess.h"
 #include "MCTS.h"
+#include <random>
 #include "MultiwayTree.hpp"
+
+using namespace std::chrono;
 
 namespace Ui
 {
@@ -27,6 +30,7 @@ public:
 private:
     Ui::MainWindow *ui;
 
+    double MCTSTime;
 
     Chess chess;
     MCTS mcts;
