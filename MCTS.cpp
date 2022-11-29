@@ -19,11 +19,11 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
     mp.clear();
 
 
-                                            // if (mp.find(chess) == mp.end())
-                                            // initChess(chess);
-                                            // mp.clear();
-                                            //    tree.remove(tree.getRoot()->_val.second);
-                                            //    tree.setRoot(chess);
+    // if (mp.find(chess) == mp.end())
+    // initChess(chess);
+    // mp.clear();
+    //    tree.remove(tree.getRoot()->_val.second);
+    //    tree.setRoot(chess);
 
 
 
@@ -66,7 +66,7 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
         int y1 = std::max(0, center.second - searchRange);
         int y2 = std::min(boxNum, center.second + searchRange);
 
-                        //        if (cntNum(chess, x1, x2, y1, y2) + tree.getChildren(tree.find(chess)).size() < (x2 - x1 + 1) * (y2 - y1 + 1))
+        //        if (cntNum(chess, x1, x2, y1, y2) + tree.getChildren(tree.find(chess)).size() < (x2 - x1 + 1) * (y2 - y1 + 1))
         if (cntNum(chess, x1, x2, y1, y2) + mp[chess].vec.size() < (x2 - x1 + 1) * (y2 - y1 + 1))       /////////////// 注释掉
         {
             return std::make_pair(expandNode(chess, center, nowblack), nowblack);
@@ -75,10 +75,10 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
         {
             Chess y = chess;
             std::vector<Chess>::iterator it;
-                        //            if (tree.getChildren(tree.find(y)).size() == 0)break;
+            //            if (tree.getChildren(tree.find(y)).size() == 0)break;
             if (mp[y].vec.size() == 0)break;                                             /////////////// 注释掉
-            double maxn = - 0x3f3f3f3f - 1;
-                        //for (it = tree.getChildren(tree.find(y)).begin(); it != tree.getChildren(tree.find(y)).end(); it++)
+            double maxn = -0x3f3f3f3f - 1;
+            //for (it = tree.getChildren(tree.find(y)).begin(); it != tree.getChildren(tree.find(y)).end(); it++)
             for (it = mp[y].vec.begin(); it != mp[y].vec.end(); it++)                   /////////////// 注释掉
             {
                 if (UCB(*it, nowblack) >= maxn)
@@ -96,7 +96,7 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
 int MCTS::cntNum(Chess chess, int x1, int x2, int y1, int y2)
 {
     int sum = 0;
-    for (int i  = x1; i <= x2; i++)
+    for (int i = x1; i <= x2; i++)
         for (int j = y1; j <= y2; j++)
             if (chess.getChess(i, j))
                 sum++;
@@ -115,32 +115,32 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
 
     int putCnt = 0;
     while (putCnt <= 10000)
+    {
+        int i = x1 + rand() % (x2 - x1 + 1);
+        int j = y1 + rand() % (y2 - y1 + 1);
+        int o = chess.getChess(i, j);
+        y.setChess(i, j, nowblack + 1);
+        if (!chess.getChess(i, j) && mp.find(y) == mp.end())
         {
-            int i = x1 + rand() % (x2 - x1 + 1);
-            int j = y1 + rand() % (y2 - y1 + 1);
-            int o = chess.getChess(i, j);
-            y.setChess(i, j, nowblack + 1);
-            if (!chess.getChess(i, j) && mp.find(y) == mp.end())
+            if (goodNext == y) // 特殊情况
             {
-                if (goodNext == y) // 特殊情况
-                {
-                    initChess(y);
-                    mp[y].value += 1000;
-                    mp[chess].vec.push_back(goodNext);
-                    fa[y] = chess;
-                    return y;
-                }
-
-                                                //initChess(y);
-                                                //tree.addChild(tree.find(chess), y);
-                initChess(y);                   /////////////// 注释掉
-                mp[chess].vec.push_back(y);     /////////////// 注释掉
-                fa[y] = chess;                  /////////////// 注释掉
+                initChess(y);
+                mp[y].value += 1000;
+                mp[chess].vec.push_back(goodNext);
+                fa[y] = chess;
                 return y;
             }
-            y.setChess(i, j, o);
-            putCnt++;
+
+            //initChess(y);
+            //tree.addChild(tree.find(chess), y);
+            initChess(y);                   /////////////// 注释掉
+            mp[chess].vec.push_back(y);     /////////////// 注释掉
+            fa[y] = chess;                  /////////////// 注释掉
+            return y;
         }
+        y.setChess(i, j, o);
+        putCnt++;
+    }
 
 }
 
@@ -149,7 +149,7 @@ Chess MCTS::bestChild(Chess chess, int nowblack)
     Chess ans = chess;
     std::vector<Chess>::iterator it;
     double maxn = -0x3f3f3f3f - 1; /// 比最小值还小才行
-                            //for (it = tree.getChildren(tree.find(chess)).begin(); it != tree.getChildren(tree.find(chess)).end(); it++)
+    //for (it = tree.getChildren(tree.find(chess)).begin(); it != tree.getChildren(tree.find(chess)).end(); it++)
     for (it = mp[chess].vec.begin(); it != mp[chess].vec.end(); it++)   /////////////// 注释掉
     {
         if (UCB(*it, nowblack) >= maxn)
@@ -229,7 +229,7 @@ void ConcurrencyCaluate::calculateScore()
         {
             // 空白点就算
             if (row > 0 && col > 0 &&
-                    gameMapVec[row][col] == 0)
+                gameMapVec[row][col] == 0)
             {
                 // 遍历周围八个方向
                 for (int y = -1; y <= 1; y++)
@@ -249,14 +249,14 @@ void ConcurrencyCaluate::calculateScore()
                             for (int i = 1; i <= 4; i++)
                             {
                                 if (row + i * y >= 0 && row + i * y <= boxNum &&
-                                        col + i * x >= 0 && col + i * x <= boxNum &&
-                                        gameMapVec[row + i * y][col + i * x] == 1) // 玩家的子
+                                    col + i * x >= 0 && col + i * x <= boxNum &&
+                                    gameMapVec[row + i * y][col + i * x] == 1) // 玩家的子
                                 {
                                     personNum++;
                                 }
                                 else if (row + i * y >= 0 && row + i * y <= boxNum &&
-                                         col + i * x >= 0 && col + i * x <= boxNum &&
-                                         gameMapVec[row + i * y][col + i * x] == 0) // 空白位
+                                    col + i * x >= 0 && col + i * x <= boxNum &&
+                                    gameMapVec[row + i * y][col + i * x] == 0) // 空白位
                                 {
                                     emptyNum++;
                                     break;
@@ -268,14 +268,14 @@ void ConcurrencyCaluate::calculateScore()
                             for (int i = 1; i <= 4; i++)
                             {
                                 if (row - i * y >= 0 && row - i * y <= boxNum &&
-                                        col - i * x >= 0 && col - i * x <= boxNum &&
-                                        gameMapVec[row - i * y][col - i * x] == 1) // 玩家的子
+                                    col - i * x >= 0 && col - i * x <= boxNum &&
+                                    gameMapVec[row - i * y][col - i * x] == 1) // 玩家的子
                                 {
                                     personNum++;
                                 }
                                 else if (row - i * y >= 0 && row - i * y <= boxNum &&
-                                         col - i * x >= 0 && col - i * x <= boxNum &&
-                                         gameMapVec[row - i * y][col - i * x] == 0) // 空白位
+                                    col - i * x >= 0 && col - i * x <= boxNum &&
+                                    gameMapVec[row - i * y][col - i * x] == 0) // 空白位
                                 {
                                     emptyNum++;
                                     break;
@@ -311,14 +311,14 @@ void ConcurrencyCaluate::calculateScore()
                             for (int i = 1; i <= 4; i++)
                             {
                                 if (row + i * y >= 0 && row + i * y <= boxNum &&
-                                        col + i * x >= 0 && col + i * x <= boxNum &&
-                                        gameMapVec[row + i * y][col + i * x] == 1) // 玩家的子
+                                    col + i * x >= 0 && col + i * x <= boxNum &&
+                                    gameMapVec[row + i * y][col + i * x] == 1) // 玩家的子
                                 {
                                     botNum++;
                                 }
                                 else if (row + i * y >= 0 && row + i * y <= boxNum &&
-                                         col + i * x >= 0 && col + i * x <= boxNum &&
-                                         gameMapVec[row +i * y][col + i * x] == 0) // 空白位
+                                    col + i * x >= 0 && col + i * x <= boxNum &&
+                                    gameMapVec[row + i * y][col + i * x] == 0) // 空白位
                                 {
                                     emptyNum++;
                                     break;
@@ -330,14 +330,14 @@ void ConcurrencyCaluate::calculateScore()
                             for (int i = 1; i <= 4; i++)
                             {
                                 if (row - i * y >= 0 && row - i * y <= boxNum &&
-                                        col - i * x >= 0 && col - i * x <= boxNum &&
-                                        gameMapVec[row - i * y][col - i * x] == -1) // AI的子
+                                    col - i * x >= 0 && col - i * x <= boxNum &&
+                                    gameMapVec[row - i * y][col - i * x] == -1) // AI的子
                                 {
                                     botNum++;
                                 }
                                 else if (row - i * y >= 0 && row - i * y <= boxNum &&
-                                         col - i * x >= 0 && col - i * x <= boxNum &&
-                                         gameMapVec[row - i * y][col - i * x] == 0) // 空白位
+                                    col - i * x >= 0 && col - i * x <= boxNum &&
+                                    gameMapVec[row - i * y][col - i * x] == 0) // 空白位
                                 {
                                     emptyNum++;
                                     break;
@@ -382,15 +382,6 @@ void MCTS::defaultPolicy(Chess chess, int nowblack, int& value)
             break;
         std::pair<int, int> h = calCenter(chess);
 
-        //if (nowblack)
-        //{
-        //    ConcurrencyCaluate cal;
-        //    chess = cal.bestChildPro(chess);
-        //    value = 1;
-        //    return;
-        //    nowblack ^= 1;
-        //}
-
         int randNum = rand() % 100;
         int i = 0, j = 0;
         if (randNum < 50)
@@ -428,9 +419,9 @@ void MCTS::backUp(Chess x, Chess y, int value)
             break;                  /////////////// 注释掉
         x = fa[x];                  /////////////// 注释掉
 
-                                    //        if (x == tree.getRoot()->_val.second)
-                                    //            break;
-                                    //       x = tree.find(x)->_parent->_val.second;
+        //        if (x == tree.getRoot()->_val.second)
+        //            break;
+        //       x = tree.find(x)->_parent->_val.second;
 
         mp[x].value += value;
         mp[x].mockNum++;
@@ -447,7 +438,7 @@ double MCTS::UCB(Chess chess, int player)
     if (player == 1)    // black
         return val / mocknum + sqrt(log(mocknum) / mocknum);
     else if (player == 0) // white
-        return - val / mocknum + sqrt(log(mocknum) / mocknum);
+        return -val / mocknum + sqrt(log(mocknum) / mocknum);
 }
 
 std::pair<int, int> MCTS::calCenter(Chess chess)
