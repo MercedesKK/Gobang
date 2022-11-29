@@ -8,6 +8,7 @@
 #include <QTime>
 #include <memory>
 #include <vector>
+#include <algorithm>
 #include "MultiwayTree.hpp"
 #include "GameModel.h"
 #include "ThreadPool.h"
@@ -37,6 +38,8 @@ public:
     std::map<Chess, Properity> mp;
     std::map<Chess, Chess> fa;
 
+    int chooseCnt;
+
     void initChess(Chess chess);
     static void initDoubleVector(std::vector<std::vector<int>>&);
 
@@ -55,7 +58,7 @@ public:
     Chess bestChild(Chess chess, int nowblack);
 
     /// @brief 模拟    游戏至结束，黑色赢返回1，白色返回-1，和棋返回0
-    static void defaultPolicy(Chess chess, int nowblack, int& value);
+    void defaultPolicy(Chess chess, int nowblack, int& value);
 
     /// @brief 回退
     void backUp(Chess x, Chess y, int value);
@@ -69,6 +72,9 @@ public:
     static std::pair<int, int> calCenter(Chess chess); // 返回当前局面平均坐标
     static int isTerminal(Chess x); // 返回1时代表棋盘满了，是终端节点
     int cntNum(Chess chess, int x1, int x2, int y1, int y2);
+
+    Chess root;
+    Chess goodNext;
 };
 
 class ConcurrencyCaluate

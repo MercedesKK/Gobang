@@ -8,11 +8,14 @@ std::mutex mtx;
 /// player 传入的是2
 Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 {
-    ConcurrencyCaluate choose;
     if (mp.find(chess) == mp.end())
         initChess(chess);
 
     fa.clear();                             /////////////// 注释掉
+
+    ConcurrencyCaluate choose;
+    goodNext = choose.bestChildPro(chess);
+    root = chess;
     mp.clear();
 
 
@@ -23,25 +26,16 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
                                             //    tree.setRoot(chess);
 
 
-    int cnt = 0; // 选择次数
-    while (cnt <= 50)
-    {
-        cnt++;
 
+    chooseCnt = 0; // 选择次数
+    while (chooseCnt <= 300)
+    {
+        chooseCnt++;
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
 
-        {   // 加作用域析构掉线程池防止和主线程冲突
-            ThreadPool pool(std::thread::hardware_concurrency());
-
-            for (int i = 1; i <= 16; i++)
-            {
-                int s;
-                pool.enqueue(defaultPolicy, selectPoint.first, selectPoint.second ^ 1, s);
-                mtx.lock();
-                backUp(selectPoint.first, chess, s);
-                mtx.unlock();
-            }
-        }
+        int val;
+        defaultPolicy(selectPoint.first, selectPoint.second ^ 1, val);
+        backUp(selectPoint.first, chess, val);
     }
 
     for (auto& it : mp)
@@ -49,8 +43,7 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
         QOUT << it.second.value;
     }
 
-    Chess ans = choose.bestChildPro(chess);
-
+    Chess ans = bestChild(chess, player);
     return ans;
 }
 
@@ -129,6 +122,14 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
             y.setChess(i, j, nowblack + 1);
             if (!chess.getChess(i, j) && mp.find(y) == mp.end())
             {
+                if (goodNext == y) // 特殊情况
+                {
+                    initChess(y);
+                    mp[y].value += 1000;
+                    mp[chess].vec.push_back(goodNext);
+                    fa[y] = chess;
+                    return y;
+                }
 
                                                 //initChess(y);
                                                 //tree.addChild(tree.find(chess), y);
@@ -157,6 +158,13 @@ Chess MCTS::bestChild(Chess chess, int nowblack)
             ans = *it;
         }
     }
+    if (chooseCnt >= 25)
+    {
+        std::vector<Chess>::iterator iter = std::find(mp[root].vec.begin(), mp[root].vec.end(), goodNext);
+        if (iter == mp[root].vec.end())
+            ans = goodNext;
+    }
+
     return ans;
 }
 
@@ -374,14 +382,14 @@ void MCTS::defaultPolicy(Chess chess, int nowblack, int& value)
             break;
         std::pair<int, int> h = calCenter(chess);
 
-        if (nowblack)
-        {
-            ConcurrencyCaluate cal;
-            chess = cal.bestChildPro(chess);
-            value = 1;
-            return;
-            nowblack ^= 1;
-        }
+        //if (nowblack)
+        //{
+        //    ConcurrencyCaluate cal;
+        //    chess = cal.bestChildPro(chess);
+        //    value = 1;
+        //    return;
+        //    nowblack ^= 1;
+        //}
 
         int randNum = rand() % 100;
         int i = 0, j = 0;
@@ -479,6 +487,3 @@ void MCTS::initDoubleVector(std::vector<std::vector<int>>& rhs)
         rhs.push_back(lineBoard);
     }
 }
-
-
-//Chess ans = bestChild(chess, player);
