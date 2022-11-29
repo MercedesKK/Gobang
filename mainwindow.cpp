@@ -181,7 +181,7 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
         auto endTime = system_clock::now();
         MCTSTime = duration_cast<milliseconds>(endTime - startTime).count() / static_cast<double>(1000);
         QString str;
-        str = QString("AI执行时间:%1ms").arg(MCTSTime);
+        str = QString("AI执行时间:%1s").arg(MCTSTime);
         ui->time->setText(str);
 
         QOUT << chess.getLastPoint().first << " " << chess.getLastPoint().second;

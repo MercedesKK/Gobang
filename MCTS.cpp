@@ -3,9 +3,12 @@
 #include <cmath>
 #define QOUT qDebug()
 
+std::mutex mtx;
+
 /// player 传入的是2
 Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 {
+    ConcurrencyCaluate choose;
     if (mp.find(chess) == mp.end())
         initChess(chess);
 
@@ -21,7 +24,7 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 
 
     int cnt = 0; // 选择次数
-    while (cnt <= 10)
+    while (cnt <= 50)
     {
         cnt++;
 
@@ -30,7 +33,7 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
         {   // 加作用域析构掉线程池防止和主线程冲突
             ThreadPool pool(std::thread::hardware_concurrency());
 
-            for (int i = 1; i <= simulationNum; i++)
+            for (int i = 1; i <= 16; i++)
             {
                 int s;
                 pool.enqueue(defaultPolicy, selectPoint.first, selectPoint.second ^ 1, s);
@@ -41,9 +44,12 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
         }
     }
 
-    // Chess ans = bestChild(chess, player);
+    for (auto& it : mp)
+    {
+        QOUT << it.second.value;
+    }
 
-    Chess ans = bestChildPro(chess);
+    Chess ans = choose.bestChildPro(chess);
 
     return ans;
 }
@@ -154,10 +160,11 @@ Chess MCTS::bestChild(Chess chess, int nowblack)
     return ans;
 }
 
-Chess MCTS::bestChildPro(Chess chess)
+Chess ConcurrencyCaluate::bestChildPro(Chess chess)
 {
-    initDoubleVector(gameMapVec);
-    initDoubleVector(scoreMapVec);
+    MCTS::initDoubleVector(gameMapVec);
+    MCTS::initDoubleVector(scoreMapVec);
+
     gameMapVec = chess.convertGomokuToVec();
     calculateScore();
 
@@ -191,7 +198,7 @@ Chess MCTS::bestChildPro(Chess chess)
     return chess;
 }
 
-void MCTS::calculateScore()
+void ConcurrencyCaluate::calculateScore()
 {
     // 统计玩家或者电脑连成的子
     int personNum = 0; // 玩家连成子的个数
@@ -367,9 +374,18 @@ void MCTS::defaultPolicy(Chess chess, int nowblack, int& value)
             break;
         std::pair<int, int> h = calCenter(chess);
 
+        if (nowblack)
+        {
+            ConcurrencyCaluate cal;
+            chess = cal.bestChildPro(chess);
+            value = 1;
+            return;
+            nowblack ^= 1;
+        }
+
         int randNum = rand() % 100;
         int i = 0, j = 0;
-        if (randNum < 75)
+        if (randNum < 50)
         {
             i = std::min(std::max(0, h.first - searchRange + rand() % (searchRange * 2 + 1)), boxNum);
             j = std::min(std::max(0, h.second - searchRange + rand() % (searchRange * 2 + 1)), boxNum);
@@ -465,3 +481,4 @@ void MCTS::initDoubleVector(std::vector<std::vector<int>>& rhs)
 }
 
 
+//Chess ans = bestChild(chess, player);

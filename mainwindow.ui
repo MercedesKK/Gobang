@@ -21,7 +21,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>250</y>
+      <y>310</y>
       <width>111</width>
       <height>61</height>
      </rect>
@@ -63,7 +63,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>160</y>
+      <y>220</y>
       <width>111</width>
       <height>61</height>
      </rect>
@@ -111,7 +111,7 @@
     <property name="geometry">
      <rect>
       <x>660</x>
-      <y>350</y>
+      <y>380</y>
       <width>131</width>
       <height>141</height>
      </rect>
@@ -134,6 +134,19 @@
     </property>
     <property name="text">
      <string>开发人员：张靖凯、时天逸</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="time">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>160</y>
+      <width>141</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>AI执行时间：</string>
     </property>
    </widget>
   </widget>

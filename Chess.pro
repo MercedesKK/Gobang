@@ -1,5 +1,9 @@
 QT       += core gui
-QMAKE_CXXFLAGS += /utf-8
+msvc {
+    QMAKE_CFLAGS += /utf-8
+    QMAKE_CXXFLAGS += /utf-8
+}
+
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
