@@ -5,6 +5,15 @@
 
 std::mutex mtx;
 
+void MCTS::Confun(MCTS* mcts, Chess chess, int nowblack, Chess y)
+{
+    int val;
+    mcts->defaultPolicy(chess, nowblack, val);
+    mtx.lock();
+    mcts->backUp(chess, y, val);
+    mtx.unlock();
+}
+
 /// player 传入的是2
 Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
 {
@@ -31,9 +40,12 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
         chooseCnt++;
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
 
-        int val;
-        defaultPolicy(selectPoint.first, selectPoint.second ^ 1, val);
-        backUp(selectPoint.first, chess, val);
+        {//加作用域析构掉线程池
+            ThreadPool pool(threadNum);
+
+            for (int i = 1; i <= simulationNum; i++)
+                pool.enqueue(Confun, this, selectPoint.first, selectPoint.second ^ 1, chess);
+        }
     }
 
     QOUT << "root:" << mp[root].value;
@@ -460,6 +472,8 @@ double MCTS::UCB(Chess chess, int player)
     else if (player == 0) // white
         return -val / mocknum + sqrt(log(mocknum) / mocknum);
 }
+
+
 
 std::pair<int, int> MCTS::calCenter(Chess chess)
 {

@@ -32,8 +32,9 @@ public:
     ////////////Tree tree;
 
     static const int searchRange = 2;       ///< 搜索范围
-    static const int selectNum = 100;       ///< 选择次数
-    static const int simulationNum = 16;    ///< 每个状态模拟次数
+    static const int selectNum = 50;        ///< 选择次数
+    static const int simulationNum = 8;     ///< 每个状态模拟次数
+    static const int threadNum = 8;         ///< 并发线程数
 
     std::map<Chess, Properity> mp;
     std::map<Chess, Chess> fa;
@@ -65,6 +66,8 @@ public:
 
     /// @brief UCB值
     double UCB(Chess chess, int player);
+
+    static void Confun(MCTS* mcts, Chess chess, int nowblack, Chess y);
 
 //    std::pair<int, std::pair<int, int>> checkFastwin_1(Chess chess);
 //    std::pair<int, std::pair<int, int>> checkFastwin_2(Chess chess);
