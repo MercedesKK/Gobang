@@ -11,22 +11,22 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
     if (mp.find(chess) == mp.end())
         initChess(chess);
 
-   ////////// fa.clear(); 
+    fa.clear(); 
 
     ConcurrencyCaluate choose;
     goodNext = choose.bestChildPro(chess);
     root = chess;
     mp.clear();
 
-    if (tree.getRoot() != tree.end())
-        tree.getRoot().remove();
-    if (tree.getRoot() == tree.end())
-        tree.setRoot(chess);
+    ////////////////if (tree.getRoot() != tree.end())
+    ////////////////    tree.getRoot().remove();
+    ////////////////if (tree.getRoot() == tree.end())
+    ////////////////    tree.setRoot(chess);
 
 
 
     chooseCnt = 0; // 选择次数
-    while (chooseCnt <= 50)
+    while (chooseCnt <= selectNum)
     {
         chooseCnt++;
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
@@ -67,31 +67,31 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
         int y1 = std::max(0, center.second - searchRange);
         int y2 = std::min(boxNum, center.second + searchRange);
 
-        if (cntNum(chess, x1, x2, y1, y2) + tree.find(chess).getChildren().size() < (x2 - x1 + 1) * (y2 - y1 + 1))
-        /////////////// if (cntNum(chess, x1, x2, y1, y2) + mp[chess].vec.size() < (x2 - x1 + 1) * (y2 - y1 + 1))
+        ////////////////if (cntNum(chess, x1, x2, y1, y2) + tree.find(chess).getChildren().size() < (x2 - x1 + 1) * (y2 - y1 + 1))
+         if (cntNum(chess, x1, x2, y1, y2) + mp[chess].vec.size() < (x2 - x1 + 1) * (y2 - y1 + 1))
         {
             return std::make_pair(expandNode(chess, center, nowblack), nowblack);
         }
         else
         {
             Chess y = chess;
-            ///////////////std::vector<Chess>::iterator it;
+            std::vector<Chess>::iterator it;
 
-            if (tree.find(y).getChildren().size() == 0)break;
-            ///////////////if (mp[y].vec.size() == 0)break;   
+            ////////////////if (tree.find(y).getChildren().size() == 0)break;
+            if (mp[y].vec.size() == 0)break;   
             double maxn = -0x3f3f3f3f - 1;
 
-            auto IterChildVec = tree.find(y).getChildren();
-            for (auto it = IterChildVec.begin(); it != IterChildVec.end(); it++)
-            ///////////////for (it = mp[y].vec.begin(); it != mp[y].vec.end(); it++)
+            ////////////////auto IterChildVec = tree.find(y).getChildren();
+            ////////////////for (auto it = IterChildVec.begin(); it != IterChildVec.end(); it++)
+            for (auto it = mp[y].vec.begin(); it != mp[y].vec.end(); it++)
             {
-                if (UCB(**it, nowblack) >= maxn)///////////////原来是一个*
+                if (UCB(*it, nowblack) >= maxn)///////////////原来是一个*
                 {
-                    maxn = UCB(**it, nowblack);///////////////原来是一个*
-                    chess = **it;///////////////原来是一个*
+                    maxn = UCB(*it, nowblack);///////////////原来是一个*
+                    chess = *it;///////////////原来是一个*
                 }
             }
-            ///////////////fa[chess] = y;                            
+            fa[chess] = y;                            
         }
         nowblack ^= 1;
 
@@ -132,18 +132,18 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
             {
                 initChess(y);
                 mp[y].value += 1000;
-                ///////////////mp[chess].vec.push_back(goodNext);
-                ///////////////fa[y] = chess;
-                tree.find(chess).addChild(goodNext);
+                mp[chess].vec.push_back(goodNext);
+                fa[y] = chess;
+                ///////////////tree.find(chess).addChild(goodNext);
                 return y;
             }
 
 
-            initChess(y);
-            tree.find(chess).addChild(y);
-            ///////////////initChess(y);                   
-            ///////////////mp[chess].vec.push_back(y);     
-            ///////////////fa[y] = chess;                  
+            ///////////////initChess(y);
+            ///////////////tree.find(chess).addChild(y);
+            initChess(y);                   
+            mp[chess].vec.push_back(y);     
+            fa[y] = chess;                  
             return y;
         }
         y.setChess(i, j, o);
@@ -155,16 +155,16 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
 Chess MCTS::bestChild(Chess chess, int nowblack)
 {
     Chess ans = chess;
-    ///////////////std::vector<Chess>::iterator it;
+    std::vector<Chess>::iterator it;
     double maxn = -0x3f3f3f3f - 1; /// 比最小值还小才行
-    auto IterChildVec = tree.find(chess).getChildren();
-    for (auto it = IterChildVec.begin(); it != IterChildVec.end(); it++)
-    ///////////////for (auto it = mp[chess].vec.begin(); it != mp[chess].vec.end(); it++)
+    ////////////////auto IterChildVec = tree.find(chess).getChildren();
+    ///////////////for (auto it = IterChildVec.begin(); it != IterChildVec.end(); it++)
+    for (auto it = mp[chess].vec.begin(); it != mp[chess].vec.end(); it++)
     {
-        if (UCB(**it, nowblack) >= maxn)///////////////原来是一个*
+        if (UCB(*it, nowblack) >= maxn)///////////////原来是一个*
         {
-            maxn = UCB(**it, nowblack);///////////////原来是一个*
-            ans = **it;///////////////原来是一个*
+            maxn = UCB(*it, nowblack);///////////////原来是一个*
+            ans = *it;///////////////原来是一个*
         }
     }
     if (chooseCnt >= 25)
@@ -172,8 +172,8 @@ Chess MCTS::bestChild(Chess chess, int nowblack)
         std::vector<Chess>::iterator iter = std::find(mp[root].vec.begin(), mp[root].vec.end(), goodNext);
         if (iter == mp[root].vec.end())
         {
-            ///////////////mp[chess].vec.push_back(goodNext);
-            tree.find(chess).addChild(goodNext);
+            mp[chess].vec.push_back(goodNext);
+            ///////////////tree.find(chess).addChild(goodNext);
             ans = goodNext;
         }
     }
@@ -435,13 +435,13 @@ void MCTS::backUp(Chess x, Chess y, int value)
     mp[x].mockNum++;
     while (!(x == y))
     {
-        ///////////////if (fa.find(x) == fa.end()) 
-        ///////////////    break;                 
-        ///////////////x = fa[x];                 
+        if (fa.find(x) == fa.end()) 
+            break;                 
+        x = fa[x];                 
 
-        if (x == *tree.getRoot())
-            break;
-        x = *tree.find(x).getParent();
+        ////////////////if (x == *tree.getRoot())
+        ////////////////    break;
+        ////////////////x = *tree.find(x).getParent();
 
         mp[x].value += value;
         mp[x].mockNum++;

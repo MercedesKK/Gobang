@@ -28,8 +28,8 @@ public:
 class MCTS
 {
 public:
-                                                using Tree = MultiwayTree<_Multiway_tree_traits<Chess>>;
-                                                Tree tree;
+    ////////////using Tree = MultiwayTree<_Multiway_tree_traits<Chess>>;
+    ////////////Tree tree;
 
     static const int searchRange = 2;       ///< 搜索范围
     static const int selectNum = 100;       ///< 选择次数
