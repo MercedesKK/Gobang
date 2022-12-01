@@ -11,24 +11,22 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
     if (mp.find(chess) == mp.end())
         initChess(chess);
 
-    fa.clear();                             /////////////// 注释掉
+   ////////// fa.clear(); 
 
     ConcurrencyCaluate choose;
     goodNext = choose.bestChildPro(chess);
     root = chess;
     mp.clear();
 
-
-    // if (mp.find(chess) == mp.end())
-    // initChess(chess);
-    // mp.clear();
-    //    tree.remove(tree.getRoot()->_val.second);
-    //    tree.setRoot(chess);
+    if (tree.getRoot() != tree.end())
+        tree.getRoot().remove();
+    if (tree.getRoot() == tree.end())
+        tree.setRoot(chess);
 
 
 
     chooseCnt = 0; // 选择次数
-    while (chooseCnt <= 300)
+    while (chooseCnt <= 50)
     {
         chooseCnt++;
         std::pair<Chess, int> selectPoint = treePolicy(chess, center, 1);
@@ -38,9 +36,11 @@ Chess MCTS::UCTsearch(Chess chess, std::pair<int, int> center, int player)
         backUp(selectPoint.first, chess, val);
     }
 
-    for (auto& it : mp)
+    QOUT << "root:" << mp[root].value;
+
+    for (auto& it : mp[root].vec)
     {
-        QOUT << it.second.value;
+        QOUT <<"child:" << mp[it].value;
     }
 
     Chess ans = bestChild(chess, player);
@@ -59,6 +59,7 @@ int MCTS::isTerminal(Chess x)
 
 std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, int nowblack)
 {
+   
     while (!isTerminal(chess) && !GameModel::judgeAll(chess))
     {
         int x1 = std::max(0, center.first - searchRange);
@@ -66,30 +67,35 @@ std::pair<Chess, int> MCTS::treePolicy(Chess chess, std::pair<int, int> center, 
         int y1 = std::max(0, center.second - searchRange);
         int y2 = std::min(boxNum, center.second + searchRange);
 
-        //        if (cntNum(chess, x1, x2, y1, y2) + tree.getChildren(tree.find(chess)).size() < (x2 - x1 + 1) * (y2 - y1 + 1))
-        if (cntNum(chess, x1, x2, y1, y2) + mp[chess].vec.size() < (x2 - x1 + 1) * (y2 - y1 + 1))       /////////////// 注释掉
+        if (cntNum(chess, x1, x2, y1, y2) + tree.find(chess).getChildren().size() < (x2 - x1 + 1) * (y2 - y1 + 1))
+        /////////////// if (cntNum(chess, x1, x2, y1, y2) + mp[chess].vec.size() < (x2 - x1 + 1) * (y2 - y1 + 1))
         {
             return std::make_pair(expandNode(chess, center, nowblack), nowblack);
         }
         else
         {
             Chess y = chess;
-            std::vector<Chess>::iterator it;
-            //            if (tree.getChildren(tree.find(y)).size() == 0)break;
-            if (mp[y].vec.size() == 0)break;                                             /////////////// 注释掉
+            ///////////////std::vector<Chess>::iterator it;
+
+            if (tree.find(y).getChildren().size() == 0)break;
+            ///////////////if (mp[y].vec.size() == 0)break;   
             double maxn = -0x3f3f3f3f - 1;
-            //for (it = tree.getChildren(tree.find(y)).begin(); it != tree.getChildren(tree.find(y)).end(); it++)
-            for (it = mp[y].vec.begin(); it != mp[y].vec.end(); it++)                   /////////////// 注释掉
+
+            auto IterChildVec = tree.find(y).getChildren();
+            for (auto it = IterChildVec.begin(); it != IterChildVec.end(); it++)
+            ///////////////for (it = mp[y].vec.begin(); it != mp[y].vec.end(); it++)
             {
-                if (UCB(*it, nowblack) >= maxn)
+                if (UCB(**it, nowblack) >= maxn)///////////////原来是一个*
                 {
-                    maxn = UCB(*it, nowblack);
-                    chess = *it;
+                    maxn = UCB(**it, nowblack);///////////////原来是一个*
+                    chess = **it;///////////////原来是一个*
                 }
             }
-            fa[chess] = y;                              /////////////// 注释掉
+            ///////////////fa[chess] = y;                            
         }
         nowblack ^= 1;
+
+
     }
 }
 
@@ -126,16 +132,18 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
             {
                 initChess(y);
                 mp[y].value += 1000;
-                mp[chess].vec.push_back(goodNext);
-                fa[y] = chess;
+                ///////////////mp[chess].vec.push_back(goodNext);
+                ///////////////fa[y] = chess;
+                tree.find(chess).addChild(goodNext);
                 return y;
             }
 
-            //initChess(y);
-            //tree.addChild(tree.find(chess), y);
-            initChess(y);                   /////////////// 注释掉
-            mp[chess].vec.push_back(y);     /////////////// 注释掉
-            fa[y] = chess;                  /////////////// 注释掉
+
+            initChess(y);
+            tree.find(chess).addChild(y);
+            ///////////////initChess(y);                   
+            ///////////////mp[chess].vec.push_back(y);     
+            ///////////////fa[y] = chess;                  
             return y;
         }
         y.setChess(i, j, o);
@@ -147,22 +155,27 @@ Chess MCTS::expandNode(Chess chess, std::pair<int, int> center, int nowblack)
 Chess MCTS::bestChild(Chess chess, int nowblack)
 {
     Chess ans = chess;
-    std::vector<Chess>::iterator it;
+    ///////////////std::vector<Chess>::iterator it;
     double maxn = -0x3f3f3f3f - 1; /// 比最小值还小才行
-    //for (it = tree.getChildren(tree.find(chess)).begin(); it != tree.getChildren(tree.find(chess)).end(); it++)
-    for (it = mp[chess].vec.begin(); it != mp[chess].vec.end(); it++)   /////////////// 注释掉
+    auto IterChildVec = tree.find(chess).getChildren();
+    for (auto it = IterChildVec.begin(); it != IterChildVec.end(); it++)
+    ///////////////for (auto it = mp[chess].vec.begin(); it != mp[chess].vec.end(); it++)
     {
-        if (UCB(*it, nowblack) >= maxn)
+        if (UCB(**it, nowblack) >= maxn)///////////////原来是一个*
         {
-            maxn = UCB(*it, nowblack);
-            ans = *it;
+            maxn = UCB(**it, nowblack);///////////////原来是一个*
+            ans = **it;///////////////原来是一个*
         }
     }
     if (chooseCnt >= 25)
     {
         std::vector<Chess>::iterator iter = std::find(mp[root].vec.begin(), mp[root].vec.end(), goodNext);
         if (iter == mp[root].vec.end())
+        {
+            ///////////////mp[chess].vec.push_back(goodNext);
+            tree.find(chess).addChild(goodNext);
             ans = goodNext;
+        }
     }
 
     return ans;
@@ -382,6 +395,13 @@ void MCTS::defaultPolicy(Chess chess, int nowblack, int& value)
             break;
         std::pair<int, int> h = calCenter(chess);
 
+        if (nowblack)
+        {
+            ConcurrencyCaluate cal;
+            chess = cal.bestChildPro(chess);
+            nowblack ^= 1;
+        }
+
         int randNum = rand() % 100;
         int i = 0, j = 0;
         if (randNum < 50)
@@ -415,13 +435,13 @@ void MCTS::backUp(Chess x, Chess y, int value)
     mp[x].mockNum++;
     while (!(x == y))
     {
-        if (fa.find(x) == fa.end()) /////////////// 注释掉
-            break;                  /////////////// 注释掉
-        x = fa[x];                  /////////////// 注释掉
+        ///////////////if (fa.find(x) == fa.end()) 
+        ///////////////    break;                 
+        ///////////////x = fa[x];                 
 
-        //        if (x == tree.getRoot()->_val.second)
-        //            break;
-        //       x = tree.find(x)->_parent->_val.second;
+        if (x == *tree.getRoot())
+            break;
+        x = *tree.find(x).getParent();
 
         mp[x].value += value;
         mp[x].mockNum++;
