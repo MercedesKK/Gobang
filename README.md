@@ -18,7 +18,6 @@
 
 4. 反向传播：根据模拟阶段产生的游戏结果通过所选择的叶子节点通过反向传播传播的方式更新这个叶子节点的统计信息。
 
-5. 
 
 ![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/MCTS1.png)
 
