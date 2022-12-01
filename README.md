@@ -20,9 +20,9 @@
 
 5. 
 
-![image](\Picture\MCTS1.png)
+![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/MCTS1.png)
 
-![image](\Picture\MCTS2.png)
+![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/MCTS2.png)
 
 ### 关键代码设计
 
@@ -71,4 +71,4 @@ void backUp(Chess x, Chess y, int value);
 
 ### 运行截图
 
-![image](\Picture\runPicture.png)
+![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/runPicture.png)
