@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/background">
+        <file>Picture/tongji.jpg</file>
+    </qresource>
+</RCC>
