@@ -21,9 +21,9 @@
 4. 反向传播：根据模拟阶段产生的游戏结果通过所选择的叶子节点通过反向传播传播的方式更新这个叶子节点的统计信息。
 
 
-![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/MCTS1.png)
+![image](https://github.com/MercedesKK/Gobang/blob/master/Picture/MCTS1.png)
 
-![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/MCTS2.png)
+![image](https://github.com/MercedesKK/Gobang/blob/master/Picture/MCTS2.png)
 
 ### 关键代码设计
 
@@ -72,4 +72,4 @@ void backUp(Chess x, Chess y, int value);
 
 ### 运行截图
 
-![image](https://github.com/Zhang-Shi-Team/Gobang/blob/master/Picture/runPicture.png)
+![image](https://github.com/MercedesKK/Gobang/blob/master/Picture/runPicture.png)
